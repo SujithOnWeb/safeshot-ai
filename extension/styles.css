@@ -1,0 +1,44 @@
+/*
+ * styles.css — SafeShot AI Content Script Styles
+ *
+ * Injected into every web page alongside content.js.
+ * Provides visual styling for:
+ *  • PII mask overlays (blur, black-box, replace)
+ *  • Manual mask mode hover highlight
+ *  • Animation effects
+ */
+
+/* ── Mask Overlay ───────────────────────────────────────────────────────────── */
+.safeshot-overlay {
+  position: absolute;
+  z-index: 2147483647;
+  pointer-events: none;
+  border-radius: 3px;
+  box-sizing: border-box;
+  transition: opacity 0.2s ease;
+}
+
+/* ── Manual-mask hover highlight ────────────────────────────────────────────── */
+.safeshot-manual-highlight {
+  outline: 2px dashed #7c3aed !important;
+  outline-offset: 2px;
+  background-color: rgba(124, 58, 237, 0.08) !important;
+  cursor: crosshair !important;
+  transition: outline-color 0.15s, background-color 0.15s;
+}
+
+/* ── Pulse animation for newly masked items ─────────────────────────────────── */
+@keyframes safeshot-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.5); }
+  70%  { box-shadow: 0 0 0 8px rgba(37, 99, 235, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+}
+
+.safeshot-overlay--new {
+  animation: safeshot-pulse 0.6s ease-out;
+}
+
+/* ── Ensure overlays don't interfere with user interaction ──────────────────── */
+[data-safeshot-masked] {
+  position: relative;
+}

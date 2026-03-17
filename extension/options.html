@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SafeShot AI — Settings</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 48px 16px;
+    }
+
+    .settings-card {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 540px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-bottom: 28px;
+    }
+
+    .field {
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: #0f172a;
+      color: #e2e8f0;
+      font-size: 14px;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus {
+      border-color: #60a5fa;
+    }
+
+    .hint {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 6px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    button {
+      padding: 10px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+
+    button:active { transform: scale(0.97); }
+
+    .btn-save {
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      color: #fff;
+      flex: 1;
+    }
+
+    .btn-save:hover { opacity: 0.9; }
+
+    .btn-reset {
+      background: #334155;
+      color: #94a3b8;
+    }
+
+    .btn-reset:hover { background: #475569; }
+
+    .btn-test {
+      background: #065f46;
+      color: #6ee7b7;
+      flex: 0;
+      white-space: nowrap;
+    }
+
+    .btn-test:hover { background: #047857; }
+
+    .toast {
+      margin-top: 16px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      display: none;
+    }
+
+    .toast--success {
+      background: rgba(16, 185, 129, 0.15);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .toast--error {
+      background: rgba(239, 68, 68, 0.15);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .divider {
+      height: 1px;
+      background: #334155;
+      margin: 28px 0;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+    }
+
+    .toggle-row span {
+      font-size: 14px;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: #334155;
+      border-radius: 24px;
+      transition: 0.3s;
+    }
+
+    .toggle-slider::before {
+      content: "";
+      position: absolute;
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background: #e2e8f0;
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+      background: #2563eb;
+    }
+
+    .toggle-switch input:checked + .toggle-slider::before {
+      transform: translateX(20px);
+    }
+  </style>
+</head>
+<body>
+  <div class="settings-card">
+    <h1>SafeShot AI Settings</h1>
+    <p class="subtitle">Configure how the extension connects to your AI backend.</p>
+
+    <!-- API URL -->
+    <div class="field">
+      <label for="apiUrl">Backend API URL</label>
+      <input type="text" id="apiUrl" placeholder="http://127.0.0.1:8000" spellcheck="false" />
+      <p class="hint">The URL where the SafeShot AI Python service is running. Use <code>http://127.0.0.1:8000</code> for local, or your hosted server URL.</p>
+    </div>
+
+    <!-- API Key (optional) -->
+    <div class="field">
+      <label for="apiKey">API Key <span style="font-weight:400;text-transform:none;color:#64748b;">(optional)</span></label>
+      <input type="password" id="apiKey" placeholder="Leave blank if not required" spellcheck="false" />
+      <p class="hint">If your backend requires an API key, enter it here. It's stored locally in Chrome and never sent to third parties.</p>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Fallback mode -->
+    <div class="toggle-row">
+      <span>Regex fallback when backend offline</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="regexFallback" checked />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <p class="hint" style="margin-bottom: 12px;">When enabled, the extension uses built-in regex patterns if the AI service is unreachable.</p>
+
+    <!-- Auto-scan -->
+    <div class="toggle-row">
+      <span>Auto-scan on page load</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="autoScan" />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <p class="hint">Automatically detect and mask PII when navigating to new pages (uses more resources).</p>
+
+    <div class="divider"></div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button class="btn-save" id="btnSave">Save Settings</button>
+      <button class="btn-test" id="btnTest">Test Connection</button>
+      <button class="btn-reset" id="btnReset">Reset</button>
+    </div>
+
+    <div class="toast toast--success" id="toastSuccess">Settings saved successfully.</div>
+    <div class="toast toast--error" id="toastError">Connection failed.</div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

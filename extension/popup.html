@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SafeShot AI</title>
+  <style>
+    /* ── Reset & base ────────────────────────────────────────── */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      width: 340px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 0;
+    }
+
+    /* ── Header ──────────────────────────────────────────────── */
+    .header {
+      background: linear-gradient(135deg, #1e40af, #7c3aed);
+      padding: 18px 20px;
+      text-align: center;
+      border-bottom: 2px solid #334155;
+      position: relative;
+    }
+    .header h1 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #fff;
+    }
+    .header p {
+      font-size: 11px;
+      color: #c7d2fe;
+      margin-top: 4px;
+    }
+    .header .settings-link {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      font-size: 18px;
+      color: rgba(255,255,255,0.7);
+      cursor: pointer;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .header .settings-link:hover { color: #fff; }
+
+    /* ── Status bar ──────────────────────────────────────────── */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: #1e293b;
+      font-size: 12px;
+    }
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #ef4444;
+      flex-shrink: 0;
+    }
+    .status-dot.connected { background: #22c55e; }
+    #statusText { color: #94a3b8; }
+
+    /* ── Buttons section ─────────────────────────────────────── */
+    .actions {
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.15s;
+    }
+    .btn:hover  { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,.35); }
+    .btn:active { transform: translateY(0); }
+
+    .btn-primary   { background: #2563eb; color: #fff; }
+    .btn-secondary { background: #334155; color: #e2e8f0; }
+    .btn-success   { background: #16a34a; color: #fff; }
+    .btn-danger    { background: #dc2626; color: #fff; }
+
+    .btn .icon { font-size: 18px; }
+
+    /* ── Settings section ────────────────────────────────────── */
+    .settings {
+      padding: 0 20px 16px;
+    }
+    .settings h3 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #64748b;
+      margin-bottom: 10px;
+    }
+    .mask-options {
+      display: flex;
+      gap: 8px;
+    }
+    .mask-option {
+      flex: 1;
+      text-align: center;
+      padding: 8px 4px;
+      border-radius: 6px;
+      background: #1e293b;
+      border: 2px solid transparent;
+      font-size: 12px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      color: #cbd5e1;
+    }
+    .mask-option:hover { background: #334155; }
+    .mask-option.active {
+      border-color: #3b82f6;
+      background: #1e3a5f;
+      color: #fff;
+    }
+    .mask-option .option-icon { font-size: 18px; display: block; margin-bottom: 2px; }
+    /* ── Engine selector ───────────────────────────────────── */
+    .engine-section {
+      padding: 0 20px 14px;
+    }
+    .engine-section h3 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #64748b;
+      margin-bottom: 8px;
+    }
+    .engine-options {
+      display: flex;
+      gap: 8px;
+    }
+    .engine-option {
+      flex: 1;
+      text-align: center;
+      padding: 10px 6px 8px;
+      border-radius: 8px;
+      background: #1e293b;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      position: relative;
+    }
+    .engine-option:hover { background: #334155; }
+    .engine-option.active {
+      border-color: #3b82f6;
+      background: #1e3a5f;
+    }
+    .engine-option.unavailable {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .engine-option .engine-icon { font-size: 22px; display: block; margin-bottom: 4px; }
+    .engine-option .engine-name { font-size: 11px; font-weight: 600; color: #e2e8f0; display: block; }
+    .engine-option .engine-desc { font-size: 9px; color: #94a3b8; display: block; margin-top: 2px; }
+    .engine-badge {
+      position: absolute;
+      top: 4px; right: 6px;
+      font-size: 8px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge-stable { background: #16a34a; color: #fff; }
+    .badge-new    { background: #d97706; color: #fff; }
+    .badge-off    { background: #64748b; color: #fff; }
+    /* ── PII Config section ───────────────────────────────────── */
+    .pii-config {
+      padding: 0 20px 14px;
+    }
+    .pii-config h3 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #64748b;
+      margin-bottom: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pii-config h3 .arrow {
+      font-size: 10px;
+      transition: transform 0.2s;
+    }
+    .pii-config h3 .arrow.open { transform: rotate(90deg); }
+    .pii-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 12px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.25s ease;
+    }
+    .pii-grid.open { max-height: 400px; }
+    .pii-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #cbd5e1;
+      padding: 3px 0;
+    }
+    .pii-toggle input[type="checkbox"] {
+      accent-color: #3b82f6;
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+    }
+
+    /* ── Stats row ───────────────────────────────────────────── */
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      padding: 12px 20px;
+      background: #1e293b;
+      border-top: 1px solid #334155;
+    }
+    .stat { text-align: center; }
+    .stat-value { font-size: 18px; font-weight: 700; color: #3b82f6; }
+    .stat-label { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: .8px; }
+
+    /* ── Footer ──────────────────────────────────────────────── */
+    .footer {
+      text-align: center;
+      padding: 10px;
+      font-size: 10px;
+      color: #475569;
+      border-top: 1px solid #1e293b;
+    }
+
+    /* ── Spinner (shown while scanning) ──────────────────────── */
+    .spinner {
+      display: none;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <a class="settings-link" id="openSettings" title="Settings">⚙️</a>
+    <h1>🛡️ SafeShot AI</h1>
+    <p>AI-Powered PII Masking</p>
+  </div>
+
+  <!-- Status -->
+  <div class="status-bar">
+    <span class="status-dot" id="statusDot"></span>
+    <span id="statusText">Checking AI service…</span>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="actions">
+    <button class="btn btn-primary" id="btnDetect">
+      <span class="icon">🔍</span>
+      Detect &amp; Mask PII
+      <span class="spinner" id="detectSpinner"></span>
+    </button>
+    <button class="btn btn-secondary" id="btnManual">
+      <span class="icon">🖱️</span>
+      Manual Mask Mode
+    </button>
+    <button class="btn btn-danger" id="btnRemove">
+      <span class="icon">🧹</span>
+      Remove All Masking
+    </button>
+    <button class="btn btn-success" id="btnCapture">
+      <span class="icon">📸</span>
+      Capture Masked Screenshot
+    </button>
+  </div>
+
+  <!-- Detection Engine Selector -->
+  <div class="engine-section">
+    <h3>Detection Engine</h3>
+    <div class="engine-options">
+      <div class="engine-option active" data-engine="presidio" id="enginePresidio">
+        <span class="engine-badge badge-stable">v1</span>
+        <span class="engine-icon">🛡️</span>
+        <span class="engine-name">Presidio</span>
+        <span class="engine-desc">Pattern + NER (fast)</span>
+      </div>
+      <div class="engine-option" data-engine="llm" id="engineLLM">
+        <span class="engine-badge badge-new">v2</span>
+        <span class="engine-icon">🧠</span>
+        <span class="engine-name">Local LLM</span>
+        <span class="engine-desc">Context-aware (Ollama)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mask style settings -->
+  <div class="settings">
+    <h3>Mask Style</h3>
+    <div class="mask-options">
+      <div class="mask-option active" data-style="blur">
+        <span class="option-icon">🌫️</span>
+        Blur
+      </div>
+      <div class="mask-option" data-style="blackbox">
+        <span class="option-icon">⬛</span>
+        Black Box
+      </div>
+      <div class="mask-option" data-style="replace">
+        <span class="option-icon">✱✱</span>
+        Replace
+      </div>
+    </div>
+  </div>
+
+  <!-- PII Types Configuration -->
+  <div class="pii-config">
+    <h3 id="piiConfigToggle"><span class="arrow" id="piiArrow">▶</span> PII Types to Mask</h3>
+    <div class="pii-grid" id="piiGrid">
+      <label class="pii-toggle"><input type="checkbox" data-pii="PERSON" checked /> Names</label>
+      <label class="pii-toggle"><input type="checkbox" data-pii="EMAIL_ADDRESS" checked /> Email</label>
+      <label class="pii-toggle"><input type="checkbox" data-pii="PHONE_NUMBER" checked /> Phone</label>
+      <label class="pii-toggle"><input type="checkbox" data-pii="CREDIT_CARD" checked /> Credit Card</label>
+      <label class="pii-toggle"><input type="checkbox" data-pii="US_SSN" checked /> SSN</label>
+      <label class="pii-toggle"><input type="checkbox" data-pii="AADHAAR_NUMBER" checked /> Aadhaar</label>
+      <label class="pii-toggle"><input type="checkbox" data-pii="PAN_NUMBER" checked /> PAN</label>
+      <label class="pii-toggle"><input type="checkbox" data-pii="BANK_ACCOUNT" checked /> Bank Acct</label>
+      <label class="pii-toggle"><input type="checkbox" data-pii="IP_ADDRESS" checked /> IP Address</label>
+      <label class="pii-toggle"><input type="checkbox" data-pii="LOCATION" checked /> Address</label>
+      <label class="pii-toggle"><input type="checkbox" data-pii="DATE_TIME" /> Date/Time</label>
+      <label class="pii-toggle"><input type="checkbox" data-pii="URL" /> URLs</label>
+      <label class="pii-toggle"><input type="checkbox" data-pii="PASSWORD_FIELD" checked /> Passwords</label>
+      <label class="pii-toggle"><input type="checkbox" data-pii="FORM_FIELDS" checked /> Form Fields</label>
+    </div>
+  </div>
+
+  <!-- Statistics -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-value" id="statDetected">0</div>
+      <div class="stat-label">Detected</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="statMasked">0</div>
+      <div class="stat-label">Masked</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="statManual">0</div>
+      <div class="stat-label">Manual</div>
+    </div>
+  </div>
+
+  <div class="footer">SafeShot AI v2.0 — Local-first &amp; GDPR-compliant</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

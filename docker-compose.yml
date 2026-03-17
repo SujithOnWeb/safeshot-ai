@@ -1,0 +1,41 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# SafeShot AI — Docker Compose
+# Starts the backend API (and optionally Ollama for LLM engine)
+# ─────────────────────────────────────────────────────────────────────────────
+version: "3.9"
+
+services:
+  # ── SafeShot AI Backend ──────────────────────────────────────────────────────
+  safeshot-api:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - SAFESHOT_API_KEY=${SAFESHOT_API_KEY:-}
+      - SAFESHOT_ALLOWED_ORIGINS=${SAFESHOT_ALLOWED_ORIGINS:-*}
+      - OLLAMA_BASE_URL=http://ollama:11434
+    restart: unless-stopped
+    depends_on:
+      - ollama
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── Ollama (optional — for LLM-based PII detection) ─────────────────────────
+  # Comment out this service if you only want Presidio
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    # Pull the llama3.2 model on first start (run once):
+    # docker exec -it safeshot-ai-ollama-1 ollama pull llama3.2
+
+volumes:
+  ollama_data:
