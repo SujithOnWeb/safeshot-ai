@@ -229,10 +229,60 @@ btnCapture.addEventListener("click", async () => {
 // ── Helper: send message to the content script of the active tab ───────────────
 function sendToContentScript(message) {
   return new Promise((resolve) => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
       if (!tabs[0]) return resolve(null);
-      chrome.tabs.sendMessage(tabs[0].id, message, (response) => {
-        resolve(response);
+
+      const tabId = tabs[0].id;
+      const tabUrl = tabs[0].url || "";
+
+      // Can't inject into restricted pages
+      if (
+        tabUrl.startsWith("chrome://") ||
+        tabUrl.startsWith("chrome-extension://") ||
+        tabUrl.startsWith("about:") ||
+        tabUrl.startsWith("edge://") ||
+        tabUrl === ""
+      ) {
+        statusText.textContent = "Cannot run on this page";
+        return resolve(null);
+      }
+
+      // Try sending — if content script isn't there, inject it first
+      chrome.tabs.sendMessage(tabId, message, (response) => {
+        if (chrome.runtime.lastError) {
+          // Content script not injected yet — inject and retry
+          chrome.scripting.executeScript(
+            {
+              target: { tabId },
+              files: ["content.js"],
+            },
+            () => {
+              if (chrome.runtime.lastError) {
+                console.warn("[SafeShot] Cannot inject content script:", chrome.runtime.lastError.message);
+                statusText.textContent = "Cannot run on this page";
+                return resolve(null);
+              }
+              // Also inject the CSS
+              chrome.scripting.insertCSS(
+                { target: { tabId }, files: ["styles.css"] },
+                () => {
+                  // Small delay to let content script initialise
+                  setTimeout(() => {
+                    chrome.tabs.sendMessage(tabId, message, (retryResponse) => {
+                      if (chrome.runtime.lastError) {
+                        console.warn("[SafeShot] Retry failed:", chrome.runtime.lastError.message);
+                        return resolve(null);
+                      }
+                      resolve(retryResponse);
+                    });
+                  }, 300);
+                }
+              );
+            }
+          );
+        } else {
+          resolve(response);
+        }
       });
     });
   });

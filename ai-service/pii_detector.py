@@ -38,9 +38,10 @@ def _build_aadhaar_recognizer() -> PatternRecognizer:
             Pattern(
                 name="aadhaar_pattern",
                 regex=r"\b\d{4}[\s\-]?\d{4}[\s\-]?\d{4}\b",
-                score=0.75,
+                score=0.85,
             )
         ],
+        context=["aadhaar", "aadhar", "uid", "uidai"],
         supported_language="en",
     )
 
@@ -86,14 +87,15 @@ def _build_phone_recognizer() -> PatternRecognizer:
             Pattern(
                 name="phone_intl",
                 regex=r"(\+?\d{1,3}[\s\-]?)(\(?\d{2,4}\)?[\s\-]?)?\d{3,4}[\s\-]?\d{4}",
-                score=0.7,
+                score=0.85,
             ),
             Pattern(
                 name="phone_us",
                 regex=r"\(?\d{3}\)?[\s\-\.]?\d{3}[\s\-\.]?\d{4}",
-                score=0.65,
+                score=0.80,
             ),
         ],
+        context=["phone", "telephone", "tel", "mobile", "cell", "call", "contact"],
         supported_language="en",
     )
 
@@ -188,9 +190,22 @@ class PIIDetector:
             for r in merged
         ]
 
-    @staticmethod
-    def _merge_overlapping(results):
-        """Remove overlapping detections, keeping the one with the higher score."""
+    # Generic entity types that should yield to more specific PII types
+    # when both overlap the same text span.
+    GENERIC_ENTITY_TYPES = {
+        "DATE_TIME", "NRP", "LOCATION", "ORGANIZATION", "PERSON",
+    }
+
+    # Specific PII entity types that should be preferred in overlap conflicts
+    SPECIFIC_PII_TYPES = {
+        "US_SSN", "CREDIT_CARD", "IBAN_CODE", "PHONE_NUMBER",
+        "EMAIL_ADDRESS", "IP_ADDRESS", "US_PASSPORT", "US_DRIVER_LICENSE",
+        "MEDICAL_LICENSE", "AADHAAR_NUMBER", "PAN_NUMBER", "BANK_ACCOUNT",
+    }
+
+    @classmethod
+    def _merge_overlapping(cls, results):
+        """Remove overlapping detections, preferring specific PII types over generic NER."""
         if not results:
             return results
 
@@ -200,9 +215,22 @@ class PIIDetector:
 
         for current in sorted_results[1:]:
             prev = merged[-1]
-            # If current overlaps with previous, keep the higher-scoring one
+            # If current overlaps with previous, resolve the conflict
             if current.start < prev.end:
-                if current.score > prev.score:
+                # Prefer specific PII types over generic NER labels
+                prev_is_generic = prev.entity_type in cls.GENERIC_ENTITY_TYPES
+                curr_is_specific = current.entity_type in cls.SPECIFIC_PII_TYPES
+                curr_is_generic = current.entity_type in cls.GENERIC_ENTITY_TYPES
+                prev_is_specific = prev.entity_type in cls.SPECIFIC_PII_TYPES
+
+                if curr_is_specific and prev_is_generic:
+                    # Specific PII always wins over generic NER
+                    merged[-1] = current
+                elif curr_is_generic and prev_is_specific:
+                    # Keep the specific PII that's already there
+                    pass
+                elif current.score > prev.score:
+                    # Same category — keep higher score
                     merged[-1] = current
             else:
                 merged.append(current)
